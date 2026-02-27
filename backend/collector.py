@@ -36,7 +36,7 @@ def extract_grant_with_gpt(html_content: str, source_url: str) -> Optional[Grant
             messages=[
                 {
                     "role": "system",
-                    "content": "Ты эксперт по грантам в Казахстане. Извлекай точную информацию о грантах. Если сумма не указана точно, используй null. Дедлайн всегда в формате YYYY-MM-DD."
+                    "content": "Ты эксперт по грантам в Казахстане. Извлекай точную информацию о грантах. Также изучай и школьные и университетские гранты и выдавай точные количества на нынешний год. Дедлайн всегда в формате YYYY-MM-DD."
                 },
                 {
                     "role": "user",
@@ -44,7 +44,7 @@ def extract_grant_with_gpt(html_content: str, source_url: str) -> Optional[Grant
                 }
             ],
             response_format=GrantInfo,
-            temperature=0.3
+            temperature=1
         )
 
         return response.choices[0].message.parsed
