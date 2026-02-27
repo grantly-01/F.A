@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # --- Database ---
+  db:
+    image: postgres:15-alpine
+    container_name: funding_db
+    environment:
+      POSTGRES_DB: funding_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - funding-network
+
+  # --- Backend (FastAPI) ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: funding_backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/funding_db
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SECRET_KEY: ${SECRET_KEY:-supersecretkey}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/backend:/backend/backend  # Горячая перезагрузка кода
+    networks:
+      - funding-network
+
+  # --- Frontend (React + Vite) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: funding_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend/src:/backend/src  # Горячая перезагрузка стилей/компонентов
+    depends_on:
+      - backend
+    networks:
+      - funding-network
+
+  # --- Monitoring ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: funding_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - funding-network
+
+volumes:
+  postgres_data:
+
+networks:
+  funding-network:
+    driver: bridge

@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'funding_backend'
+    static_configs:
+      - targets: ['backend:8000']
+    # Примечание: Чтобы FastAPI отдавал метрики, нужно будет добавить
+    # библиотеку prometheus-fastapi-instrumentator в Python код,
+    # но пока это базовая настройка, чтобы контейнер запустился.
