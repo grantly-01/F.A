@@ -5,11 +5,11 @@ from sqlalchemy import func, or_
 from typing import List, Optional
 from datetime import date
 
-from backend.database import engine, Base, get_db
-from backend.models import Grant
-from backend.schemas import GrantCreate, GrantResponse, GrantSearch
-from backend.auth import create_access_token, verify_token
-from backend.collector import collect_from_url, TEST_URLS
+from database import engine, Base, get_db
+from models import Grant
+from schemas import GrantCreate, GrantResponse, GrantSearch
+from auth import create_access_token, verify_token
+from collector import collect_from_url, TEST_URLS
 
 # Создаем таблицы
 Base.metadata.create_all(bind=engine)
@@ -116,8 +116,7 @@ def trigger_collection(
     results = []
     for test_url in TEST_URLS[:2]:  # Первые 2 для демо
         success = collect_from_url(db, test_url)
-        results.backendend({"url": test_url, "success": success})
-
+        results.append({"url": test_url, "success": success})
     return {"message": "Batch collection completed", "results": results}
 
 
