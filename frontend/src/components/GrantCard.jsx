@@ -1,7 +1,9 @@
 import React from 'react';
 import { Calendar, Building2, Wallet, ArrowUpRight } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
 const GrantCard = ({ grant }) => {
+  const navigate = useNavigate();
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Без даты';
@@ -18,7 +20,13 @@ const GrantCard = ({ grant }) => {
     (deadlineDate - new Date()) < (7 * 24 * 60 * 60 * 1000);
 
   return (
-    <div className="group relative flex flex-col bg-[#111827] rounded-2xl border border-slate-800 hover:border-blue-500/40 transition-all duration-300 h-full hover:-translate-y-1">
+  <div
+    onClick={() => navigate(`/grants/${grant.id}`)}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => e.key === "Enter" && navigate(`/grants/${grant.id}`)}
+    className="group relative flex flex-col bg-[#111827] rounded-2xl border border-slate-800 hover:border-blue-500/40 transition-all duration-300 h-full hover:-translate-y-1 cursor-pointer"
+>
 
       {/* Метка срочности */}
       {isUrgent && grant.status === 'active' && (
@@ -75,6 +83,7 @@ const GrantCard = ({ grant }) => {
           href={grant.source_url}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
           className="flex items-center justify-center gap-2 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all duration-300 font-medium"
         >
           Подробнее
