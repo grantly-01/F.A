@@ -1,0 +1,51 @@
+export const mockStats = {
+    total_grants: 3,
+    active_grants: 2,
+    funders: [
+      { name: "Mock Fund A", count: 2 },
+      { name: "Mock Fund B", count: 1 },
+    ],
+    total_max_amount: 15000000,
+  };
+  
+  export const mockGrants = [
+    {
+      id: 1,
+      title: "Грант на развитие стартапов",
+      description: "Поддержка стартапов на ранней стадии. Финансирование, менторство.",
+      funder: "Mock Fund A",
+      amount_min: 1000000,
+      amount_max: 5000000,
+      currency: "KZT",
+      deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+      status: "active",
+      eligibility: "ИП/ТОО, Казахстан",
+      source_url: "https://example.com/grant/1",
+    },
+    {
+      id: 2,
+      title: "Конкурс социальных проектов",
+      description: "Финансирование социальных инициатив в регионах Казахстана.",
+      funder: "Mock Fund A",
+      amount_min: 500000,
+      amount_max: 3000000,
+      currency: "KZT",
+      deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+      status: "active",
+      eligibility: "НПО, инициативные группы",
+      source_url: "https://example.com/grant/2",
+    },
+    {
+      id: 3,
+      title: "Образовательные гранты",
+      description: "Поддержка обучения и исследований. Стипендии и гранты.",
+      funder: "Mock Fund B",
+      amount_min: 0,
+      amount_max: 7000000,
+      currency: "KZT",
+      deadline: new Date(Date.now() + 40 * 24 * 60 * 60 * 1000).toISOString(),
+      status: "inactive",
+      eligibility: "Студенты/магистранты",
+      source_url: "https://example.com/grant/3",
+    },
+  ];
