@@ -36,10 +36,13 @@ export async function getGrants(searchQuery = "") {
   }
 }
 
-export async function loginAdmin() {
+export async function loginAdmin(username = "", password = "") {
   try {
     return await fetchJson(`${API_URL}/login`, { method: "POST" });
   } catch {
+    if (username !== "admin" || password !== "admin") {
+      throw new Error("Неверный логин или пароль");
+    }
     return { access_token: "mock-token", token_type: "bearer" };
   }
 }

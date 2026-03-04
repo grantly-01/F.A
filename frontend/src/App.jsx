@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import AdminPage from "./pages/AdminPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import GrantDetailsPage from "./pages/GrantDetailsPage";
 
 function Layout({ searchValue, setSearchValue, isAuthed, setIsAuthed }) {
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ export default function App() {
           }
         >
           <Route path="/" element={<HomePage searchValue={searchValue} />} />
+          <Route path="/grants/:id" element={<GrantDetailsPage />} />
           <Route path="/admin" element={<AdminPage isAuthed={isAuthed} setIsAuthed={setIsAuthed} />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

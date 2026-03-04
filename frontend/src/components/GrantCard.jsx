@@ -79,16 +79,16 @@ const GrantCard = ({ grant }) => {
 
       {/* Кнопка */}
       <div className="p-6 pt-0 mt-auto">
-        <a
-          href={grant.source_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/grants/${grant.id}`);
+          }}
           className="flex items-center justify-center gap-2 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all duration-300 font-medium"
         >
           Подробнее
           <ArrowUpRight className="w-4 h-4" />
-        </a>
+        </button>
       </div>
 
     </div>

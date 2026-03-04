@@ -1,17 +1,26 @@
 import { useState } from "react";
 import { loginAdmin, collectFull } from "../api";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 export default function AdminPage({ isAuthed, setIsAuthed }) {
+  const navigate = useNavigate();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const onLogin = async (e) => {
     e.preventDefault();
-    const res = await loginAdmin();
-    localStorage.setItem("token", res.access_token);
-    setIsAuthed(true);
-    setMessage("Админ-режим включён.");
+    setMessage("");
+  
+    try {
+      const res = await loginAdmin(login, password);
+      localStorage.setItem("token", res.access_token);
+      setIsAuthed(true);
+      setMessage("Админ-режим включён.");
+    } catch (err) {
+      setMessage(err?.message || "Ошибка входа");
+    }
   };
 
   const onLogout = () => {
@@ -29,6 +38,13 @@ export default function AdminPage({ isAuthed, setIsAuthed }) {
   return (
     <div className="min-h-screen bg-[#070b14] text-white">
       <main className="max-w-3xl mx-auto px-6 pt-16 pb-24">
+      <button
+          onClick={() => navigate("/")}
+          className="inline-flex items-center gap-2 text-slate-300 hover:text-white transition mb-8"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          На главную
+        </button>
         <h1 className="text-3xl font-semibold mb-6">Админ-панель</h1>
 
         <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6">

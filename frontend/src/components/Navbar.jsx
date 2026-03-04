@@ -1,5 +1,6 @@
 import React from 'react';
 import { Rocket, Search, LogIn, LogOut, RefreshCw } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 const Navbar = ({ searchValue, onSearch, isAuthed, onLoginClick, onLogoutClick, onCollectClick }) => {
   return (
@@ -8,15 +9,15 @@ const Navbar = ({ searchValue, onSearch, isAuthed, onLoginClick, onLogoutClick, 
         <div className="flex items-center justify-between h-20 gap-4">
 
           {/* Логотип */}
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-slate-800 border border-slate-700">
               <Rocket className="w-5 h-5 text-blue-400" />
             </div>
-
+            
             <span className="text-xl font-semibold tracking-tight text-white">
               GrantHub<span className="text-blue-400">.kz</span>
             </span>
-          </div>
+          </Link>
 
           {/* Поиск */}
           <div className="flex flex-1 max-w-xl relative">
