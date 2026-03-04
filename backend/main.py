@@ -5,11 +5,12 @@ from sqlalchemy import func, or_
 from typing import List, Optional
 from datetime import date
 
-from database import engine, Base, get_db
-from models import Grant
-from schemas import GrantCreate, GrantResponse, GrantSearch
-from auth import create_access_token, verify_token
-from collector import collect_from_url, TEST_URLS
+from .collector import run_full_collection, collect_from_url, TEST_URLS
+from .database import SessionLocal, engine, Base, get_db
+from .models import Grant
+from .schemas import GrantCreate, GrantResponse, GrantSearch
+from .auth import create_access_token, verify_token
+
 
 # Создаем таблицы
 Base.metadata.create_all(bind=engine)
@@ -63,13 +64,14 @@ def get_grants(
     if max_amount:
         query = query.filter(Grant.amount_min <= max_amount)
     if funder:
-        query = query.filter(Grant.funder.contains(funder))
+        query = query.filter(Grant.funder.ilike(f"%{funder}%"))
     if search:
+        q = f"%{search}%"
         query = query.filter(
             or_(
-                Grant.title.contains(search),
-                Grant.description.contains(search),
-                Grant.eligibility.contains(search)
+                Grant.title.ilike(q),
+                Grant.description.ilike(q),
+                Grant.eligibility.ilike(q),
             )
         )
 
@@ -117,8 +119,16 @@ def trigger_collection(
     for test_url in TEST_URLS[:2]:  # Первые 2 для демо
         success = collect_from_url(db, test_url)
         results.append({"url": test_url, "success": success})
+
     return {"message": "Batch collection completed", "results": results}
 
+
+
+@backend.post("/collect/full")
+def collect_full():
+    db = SessionLocal()
+    run_full_collection(db)
+    return {"status": "collection started"}
 
 @backend.get("/stats")
 def get_stats(db: Session = Depends(get_db)):

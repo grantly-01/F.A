@@ -1,70 +1,162 @@
 import os
-import json
-from typing import Optional
-from pydantic import BaseModel, Field
-import openai
+import re
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
 from sqlalchemy.orm import Session
-from backend.models import Grant
+from datetime import datetime
+import openai
+from dotenv import load_dotenv
 
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+from .models import Grant
+from .schemas import GrantInfo
 
-
-class GrantInfo(BaseModel):
-    title: str = Field(description="Название гранта/конкурса")
-    description: str = Field(description="Краткое описание программы")
-    funder: str = Field(description="Название фонда/организации")
-    amount_min: Optional[int] = Field(None, description="Минимальная сумма числом")
-    amount_max: Optional[int] = Field(None, description="Максимальная сумма числом")
-    currency: str = Field(default="KZT", description="Валюта: KZT, USD, EUR")
-    deadline: Optional[str] = Field(None, description="Дедлайн в формате YYYY-MM-DD")
-    eligibility: str = Field(description="Кто может подать заявку")
-    status: str = Field(default="active", description="active или closed")
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 
-def extract_grant_with_gpt(html_content: str, source_url: str) -> Optional[GrantInfo]:
-    """Извлекает структурированные данные о гранте из HTML с помощью GPT"""
+def _extract_grant_no_ai(html: str, source_url: str) -> GrantInfo | None:
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text("\n", strip=True)
 
-    # Очищаем HTML
-    soup = BeautifulSoup(html_content, 'html.parser')
-    text = soup.get_text(separator='\n', strip=True)[:6000]  # Лимит токенов
+    h1 = soup.find("h1")
+    title = (h1.get_text(strip=True) if h1 else None) or (soup.title.get_text(strip=True) if soup.title else None)
+    if not title:
+        return None
+
+    meta = soup.find("meta", attrs={"name": "description"})
+    description = meta.get("content") if meta and meta.get("content") else None
+    if not description:
+        description = (text[:500] + "...") if len(text) > 500 else text
+
+    # Примитивное извлечение сумм: берём большие числа как суммы в тенге
+    number_candidates = []
+    for raw in re.findall(r"(\d[\d\s]{4,})", text):
+        cleaned = int(re.sub(r"\s+", "", raw))
+        # отсеиваем явный шум, оставляем только суммы больше 100 000
+        if cleaned >= 100_000:
+            number_candidates.append(cleaned)
+
+    amount_min = None
+    amount_max = None
+    if number_candidates:
+        amount_max = max(number_candidates)
+        if len(number_candidates) > 1:
+            amount_min = min(number_candidates)
+
+    host = source_url.split("/")[2] if "://" in source_url else source_url
+
+    return GrantInfo(
+        title=title[:250],
+        description=(description or "")[:1000],
+        funder=host[:200],
+        category="grant",
+        amount_min=amount_min,
+        amount_max=amount_max,
+        currency="KZT",
+        deadline=None,
+        eligibility="Смотрите условия на странице источника.",
+        country="KZ",
+        status="active",
+    )
+
+KEYWORDS = [
+    # англ/рус базовые по грантам и субсидиям
+    "grant", "грант",
+    "subsid", "субсид",
+    "fund", "funding",
+    "финанс", "поддерж",
+
+    # стипендии и обучение
+    "scholar", "stipend", "стипенд",
+    "universit", "университ",
+    "student", "студент",
+    "bachelor", "бакалавр",
+    "master", "магистр",
+    "phd", "докторант",
+
+    # школьники, олимпиады, ЕНТ
+    "school", "школьн",
+    "olymp", "олимпиад",
+    "ent", "ент",
+
+    # конкурсы и программы
+    "конкурс", "программа", "подпрограмма",
+]
+
+BASE_SITES = [
+    "https://www.gov.kz",
+    "https://damu.kz",
+    "https://sk.kz",
+    "https://baiterek.gov.kz",
+    "https://bolashak.gov.kz"
+]
+
+TEST_URLS = BASE_SITES
+
+# Лимит глубины обхода на один сайт, чтобы не утащить весь портал gov.kz
+MAX_PAGES_PER_SITE = 200
+
+
+def extract_grant(html: str, source_url: str):
+    # Если ключа нет или клиент не инициализирован — используем простую эвристику
+    if client is None:
+        return _extract_grant_no_ai(html, source_url)
+
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text("\n", strip=True)[:6000]
 
     try:
         response = client.beta.chat.completions.parse(
             model="gpt-4o-mini",
+            temperature=1,
             messages=[
                 {
                     "role": "system",
-                    "content": "Ты эксперт по грантам в Казахстане. Извлекай точную информацию о грантах. Также изучай и школьные и университетские гранты и выдавай точные количества на нынешний год. Дедлайн всегда в формате YYYY-MM-DD."
+                    "content": """
+Ты эксперт по государственным и частным программам финансирования в Казахстане.
+
+Извлекай ТОЛЬКО программы, действующие в Республике Казахстан.
+Игнорируй международные гранты.
+
+Категории:
+- grant
+- subsidy
+- scholarship
+- financing
+- support_program
+
+Дедлайн формат YYYY-MM-DD.
+"""
                 },
                 {
                     "role": "user",
-                    "content": f"Извлеки информацию о гранте из текста:\n\n{text[:4000]}\n\nИсточник: {source_url}"
+                    "content": f"Текст:\n{text}\n\nИсточник: {source_url}"
                 }
             ],
             response_format=GrantInfo,
-            temperature=1
         )
 
-        return response.choices[0].message.parsed
+        parsed = response.choices[0].message.parsed
+        # Модель может вернуть null по инструкции — тогда пробуем простой парсер
+        if parsed is None:
+            return _extract_grant_no_ai(html, source_url)
+
+        return parsed
 
     except Exception as e:
-        print(f"GPT Error: {e}")
-        return None
+        print("GPT error:", e)
+        # При любой ошибке пытаемся вытащить хотя бы базовую информацию без AI
+        return _extract_grant_no_ai(html, source_url)
 
 
-def save_grant_to_db(db: Session, grant_info: GrantInfo, source_url: str, raw_html: str):
-    """Сохраняет грант в базу данных"""
+def save_grant(db: Session, grant_info: GrantInfo, url: str, raw_html: str):
 
-    # Проверка на дубликат по URL
-    existing = db.query(Grant).filter(Grant.source_url == source_url).first()
+    existing = db.query(Grant).filter(Grant.source_url == url).first()
     if existing:
         return None
 
-    from datetime import datetime
-
-    # Парсим дату
     deadline = None
     if grant_info.deadline:
         try:
@@ -74,52 +166,118 @@ def save_grant_to_db(db: Session, grant_info: GrantInfo, source_url: str, raw_ht
 
     grant = Grant(
         title=grant_info.title[:500],
-        description=grant_info.description[:2000] if grant_info.description else None,
-        funder=grant_info.funder[:200] if grant_info.funder else "Unknown",
+        description=grant_info.description[:2000],
+        funder=grant_info.funder[:200],
+        category=grant_info.category,
         amount_min=grant_info.amount_min,
         amount_max=grant_info.amount_max,
-        currency=grant_info.currency or "KZT",
+        currency=grant_info.currency,
         deadline=deadline,
-        eligibility=grant_info.eligibility[:1000] if grant_info.eligibility else None,
-        source_url=source_url[:500],
-        source_raw=raw_html[:5000],  # Обрезаем для экономии места
-        status=grant_info.status or "active"
+        eligibility=grant_info.eligibility[:1000],
+        country="KZ",
+        source_url=url,
+        source_raw=raw_html[:5000],
+        status="active"
     )
 
     db.add(grant)
     db.commit()
     db.refresh(grant)
+
     return grant
 
 
+def collect_from_site(db: Session, base_url: str):
+    """
+    Более глубокий обход: идём вглубь по ссылкам внутри домена,
+    собираем все страницы, в чьём href есть ключевые слова.
+    """
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    visited: set[str] = set()
+    to_visit: list[str] = [base_url]
+
+    base_host = urlparse(base_url).netloc
+
+    while to_visit and len(visited) < MAX_PAGES_PER_SITE:
+        url = to_visit.pop(0)
+        if url in visited:
+            continue
+        visited.add(url)
+
+        try:
+            response = requests.get(url, headers=headers, timeout=30)
+        except Exception as e:
+            print("Collection error (fetch):", e)
+            continue
+
+        html = response.text
+
+        # Пытаемся извлечь грант с этой страницы
+        try:
+            grant_info = extract_grant(html, url)
+            if grant_info:
+                save_grant(db, grant_info, url, html)
+        except Exception as e:
+            print("Collection error (parse):", e)
+
+        # Собираем новые ссылки для обхода
+        try:
+            soup = BeautifulSoup(html, "html.parser")
+            for a in soup.find_all("a", href=True):
+                href = a["href"]
+                href_lower = href.lower()
+
+                full_url = urljoin(url, href)
+                parsed = urlparse(full_url)
+
+                # Ходим только внутри того же домена
+                if parsed.netloc != base_host:
+                    continue
+
+                # Только ссылки, похожие на гранты/программы
+                if not any(word in href_lower for word in KEYWORDS):
+                    continue
+
+                if full_url not in visited and full_url not in to_visit:
+                    to_visit.append(full_url)
+
+        except Exception as e:
+            print("Collection error (links):", e)
+
+
+def run_full_collection(db: Session):
+
+    for site in BASE_SITES:
+        print(f"Scanning {site}")
+        collect_from_site(db, site)
+
+    update_expired(db)
+
+
+def update_expired(db: Session):
+
+    today = datetime.today().date()
+
+    grants = db.query(Grant).filter(Grant.deadline != None).all()
+
+    for g in grants:
+        if g.deadline < today:
+            g.status = "closed"
+
+    db.commit()
+
+
 def collect_from_url(db: Session, url: str) -> bool:
-    """Основная функция сбора данных с URL"""
-
     try:
-        # Загружаем страницу
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0'
-        }
-        response = requests.get(url, headers=headers, timeout=30)
-        response.raise_for_status()
+        response = requests.get(url, timeout=30)
+        grant_info = extract_grant(response.text, url)
 
-        # Извлекаем данные через GPT
-        grant_info = extract_grant_with_gpt(response.text, url)
-
-        if not grant_info:
-            return False
-
-        # Сохраняем в БД
-        result = save_grant_to_db(db, grant_info, url, response.text)
-        return result is not None
+        if grant_info:
+            save_grant(db, grant_info, url, response.text)
+            return True
 
     except Exception as e:
-        print(f"Collection error for {url}: {e}")
-        return False
+        print("Collection error:", e)
 
-
-# Тестовые URL для Казахстана
-TEST_URLS = [
-    "https://www.gov.kz/memleket/entities/gfni/press/article/6e07cf74-5d8f-4b3e-9c2a-1e5d8f4b3e9c",  # ГФНИ
-    "https://sk.kz/social",  # Самрук-Казына
-]
+    return False

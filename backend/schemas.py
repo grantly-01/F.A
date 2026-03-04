@@ -34,3 +34,16 @@ class GrantSearch(BaseModel):
     max_amount: Optional[int] = None
     funder: Optional[str] = None
     deadline_after: Optional[date] = None
+
+class GrantInfo(BaseModel):
+    title: str
+    description: str
+    funder: str
+    category: str
+    amount_min: Optional[int] = None
+    amount_max: Optional[int] = None
+    currency: str = "KZT"
+    deadline: Optional[str] = None
+    eligibility: str
+    country: str = "KZ"
+    status: str = "active"

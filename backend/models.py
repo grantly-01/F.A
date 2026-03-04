@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, BigInteger, DateTime, Date
 from sqlalchemy.sql import func
-from backend.database import Base
+
+from .database import Base
 
 
 class Grant(Base):
@@ -20,3 +21,5 @@ class Grant(Base):
     status = Column(String(20), default="active")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
+    category = Column(String, nullable=True)
+    country = Column(String, default="KZ")
