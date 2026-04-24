@@ -1,0 +1,1 @@
+"""Funding Aggregator - App Package"""
