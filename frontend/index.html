@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Funding Aggregator — AI-агрегатор грантов, стипендий и конкурсов финансирования Казахстана. Поиск с помощью искусственного интеллекта.">
+    <title>Funding Aggregator — Гранты и стипендии Казахстана</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="starsCanvas"></canvas>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo" id="nav-logo">
+                <span class="logo-icon">✦</span>
+                <span class="logo-text">Funding<span class="logo-highlight">Aggregator</span></span>
+            </a>
+            <div class="nav-links" id="nav-links">
+                <a href="#" class="nav-link active" data-page="home" data-i18n="nav.home">Главная</a>
+                <a href="#" class="nav-link" data-page="grants" data-i18n="nav.grants">Гранты</a>
+                <a href="#" class="nav-link" data-page="ai-search" data-i18n="nav.ai_search">AI Поиск</a>
+                <a href="#" class="nav-link" data-page="stats" data-i18n="nav.stats">Статистика</a>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-lang" id="lang-toggle" title="Тілді ауыстыру / Сменить язык">ҚАЗ</button>
+                <div class="auth-buttons" id="auth-buttons">
+                    <button class="btn btn-ghost" id="btn-login" data-i18n="nav.signin">Войти</button>
+                    <button class="btn btn-primary" id="btn-register" data-i18n="nav.signup">Регистрация</button>
+                </div>
+                <div class="user-menu hidden" id="user-menu">
+                    <span class="user-name" id="user-name"></span>
+                    <button class="btn btn-ghost btn-sm" id="btn-logout" data-i18n="nav.logout">Выйти</button>
+                </div>
+            </div>
+            <button class="nav-toggle" id="nav-toggle">☰</button>
+        </div>
+    </nav>
+
+    <main class="main-content" id="main-content">
+
+        <!-- HOME PAGE -->
+        <section class="page active" id="page-home">
+            <div class="hero">
+                <div class="hero-glow"></div>
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <span class="badge-dot"></span>
+                        <span data-i18n="hero.badge">AI-поиск грантов</span>
+                    </div>
+                    <h1 class="hero-title">
+                        <span data-i18n="hero.title1">Найди </span><span class="gradient-text" data-i18n="hero.title_highlight">Гранты</span><br>
+                        <span data-i18n="hero.title2"> и Стипендии в Казахстане</span>
+                    </h1>
+                    <p class="hero-subtitle" data-i18n="hero.subtitle">
+                        Агрегатор грантов, стипендий и конкурсов финансирования. Поиск с помощью искусственного интеллекта и умные рекомендации.
+                    </p>
+                    <div class="hero-search">
+                        <div class="search-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="hero-search-input"
+                                   data-i18n="hero.search_placeholder"
+                                   placeholder="Поиск грантов... напр. 'гранты для IT стартапов до 5 млн тенге'"
+                                   class="search-input">
+                            <button class="btn btn-primary btn-search" id="hero-search-btn" data-i18n="hero.search_btn">Найти</button>
+                        </div>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-number" id="stat-total">—</span>
+                            <span class="stat-label" data-i18n="hero.stat_total">Всего грантов</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="stat-active">—</span>
+                            <span class="stat-label" data-i18n="hero.stat_active">Активных</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="stat-sources">—</span>
+                            <span class="stat-label" data-i18n="hero.stat_sources">Источников</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features-section">
+                <h2 class="section-title"><span data-i18n="features.title1">Почему </span><span class="gradient-text" data-i18n="features.title_highlight">Funding Aggregator</span><span data-i18n="features.title2">?</span></h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3 data-i18n="features.ai_title">AI-Поиск</h3>
+                        <p data-i18n="features.ai_desc">Поиск на естественном языке с помощью LLaMA 3.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3 data-i18n="features.realtime_title">Автосбор данных</h3>
+                        <p data-i18n="features.realtime_desc">Данные собираются с нескольких источников и обновляются автоматически.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3 data-i18n="features.recommend_title">Рекомендации</h3>
+                        <p data-i18n="features.recommend_desc">Персональные рекомендации на основе ваших интересов.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3 data-i18n="features.filter_title">Фильтрация</h3>
+                        <p data-i18n="features.filter_desc">Фильтр по категории, стране, сумме, дедлайнам.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⭐</div>
+                        <h3 data-i18n="features.favorites_title">Избранное</h3>
+                        <p data-i18n="features.favorites_desc">Сохраняйте интересные гранты.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔐</div>
+                        <h3 data-i18n="features.secure_title">Безопасность</h3>
+                        <p data-i18n="features.secure_desc">JWT-авторизация, Docker, Prometheus.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recent-section">
+                <h2 class="section-title"><span data-i18n="recent.title1">Последние </span><span class="gradient-text" data-i18n="recent.title_highlight">Возможности</span></h2>
+                <div class="grants-grid" id="recent-grants"></div>
+                <div class="text-center">
+                    <button class="btn btn-ghost btn-lg" data-page="grants" id="btn-view-all" data-i18n="recent.view_all">Смотреть все гранты →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- GRANTS PAGE -->
+        <section class="page" id="page-grants">
+            <div class="page-header">
+                <h1><span data-i18n="grants.title1">Каталог </span><span class="gradient-text" data-i18n="grants.title_highlight">Грантов</span></h1>
+                <p data-i18n="grants.subtitle">Поиск и фильтрация по всем агрегированным грантам</p>
+            </div>
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <input type="text" id="grants-search" data-i18n="grants.search_placeholder" placeholder="Поиск грантов..." class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <select id="filter-source" class="filter-select">
+                        <option value="" data-i18n-option="grants.all_sources">Все источники</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="filter-country" class="filter-select">
+                        <option value="" data-i18n-option="grants.all_countries">Все страны</option>
+                        <option value="Казахстан" data-i18n-option="country.kz">Казахстан</option>
+                        <option value="International">Международный</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="filter-status" class="filter-select">
+                        <option value="active" data-i18n-option="grants.active">Активные</option>
+                        <option value="" data-i18n-option="grants.all">Все</option>
+                        <option value="expired" data-i18n-option="grants.expired">Истёкшие</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="filter-sort" class="filter-select">
+                        <option value="created_at:desc" data-i18n-option="grants.newest">Новые</option>
+                        <option value="created_at:asc" data-i18n-option="grants.oldest">Старые</option>
+                        <option value="deadline:asc" data-i18n-option="grants.deadline_soon">Ближайший дедлайн</option>
+                        <option value="amount_max:desc" data-i18n-option="grants.amount_high">Сумма (макс.)</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="btn-apply-filters" data-i18n="grants.apply_btn">Применить</button>
+            </div>
+            <div class="grants-grid" id="grants-list"></div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+
+        <!-- AI SEARCH PAGE -->
+        <section class="page" id="page-ai-search">
+            <div class="page-header">
+                <h1><span data-i18n="ai.title1">🤖 AI </span><span class="gradient-text" data-i18n="ai.title_highlight">Поиск</span></h1>
+                <p data-i18n="ai.subtitle">Опишите что вы ищете на естественном языке</p>
+            </div>
+            <div class="ai-search-container">
+                <div class="ai-input-wrapper">
+                    <textarea id="ai-query" class="ai-input" rows="3"
+                        data-i18n="ai.placeholder"
+                        placeholder="напр. Найди гранты для IT стартапов в Казахстане до 5 млн тенге с дедлайном в 2025..."></textarea>
+                    <button class="btn btn-primary btn-lg" id="btn-ai-search" data-i18n="ai.search_btn">✨ Найти с AI</button>
+                </div>
+                <div class="ai-examples">
+                    <span class="ai-example-label" data-i18n="ai.try_label">Попробуйте:</span>
+                    <button class="ai-example-btn" data-query="гранты для IT стартапов в Казахстане до 5 миллионов тенге" data-i18n="ai.example1_label">IT гранты &lt;5М₸</button>
+                    <button class="ai-example-btn" data-query="научные гранты для молодых учёных в Казахстане" data-i18n="ai.example2_label">Наука КЗ</button>
+                    <button class="ai-example-btn" data-query="инновационные гранты для стартапов с дедлайном в 2025" data-i18n="ai.example3_label">Стартапы 2025</button>
+                    <button class="ai-example-btn" data-query="стипендии для магистрантов и докторантов Казахстана" data-i18n="ai.example4_label">Стипендии</button>
+                </div>
+                <div class="ai-results" id="ai-results"></div>
+            </div>
+        </section>
+
+        <!-- STATS PAGE -->
+        <section class="page" id="page-stats">
+            <div class="page-header">
+                <h1><span data-i18n="stats.title1">📊 </span><span class="gradient-text" data-i18n="stats.title_highlight">Статистика</span></h1>
+                <p data-i18n="stats.subtitle">Обзор агрегированных данных</p>
+            </div>
+            <div class="stats-dashboard" id="stats-dashboard">
+                <div class="stats-card">
+                    <div class="stats-card-icon">📋</div>
+                    <div class="stats-card-number" id="stats-total">0</div>
+                    <div class="stats-card-label" data-i18n="stats.total">Всего грантов</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-card-icon">✅</div>
+                    <div class="stats-card-number" id="stats-active">0</div>
+                    <div class="stats-card-label" data-i18n="stats.active">Активных</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-card-icon">🌐</div>
+                    <div class="stats-card-number" id="stats-sources">0</div>
+                    <div class="stats-card-label" data-i18n="stats.sources">Источников</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-card-icon">🤖</div>
+                    <div class="stats-card-number">Groq AI</div>
+                    <div class="stats-card-label" data-i18n="stats.ai_engine">AI движок</div>
+                </div>
+            </div>
+            <div class="monitoring-links">
+                <h3 data-i18n="stats.monitoring">Мониторинг</h3>
+                <div class="link-cards">
+                    <a href="http://localhost:9090" target="_blank" class="link-card"><span class="link-icon">📈</span><span>Prometheus</span></a>
+                    <a href="http://localhost:3001" target="_blank" class="link-card"><span class="link-icon">📊</span><span>Grafana</span></a>
+                    <a href="http://localhost:8000/docs" target="_blank" class="link-card"><span class="link-icon">📖</span><span>API Docs (Swagger)</span></a>
+                    <a href="http://localhost:8000/redoc" target="_blank" class="link-card"><span class="link-icon">📄</span><span>ReDoc</span></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay hidden" id="auth-modal">
+        <div class="modal">
+            <button class="modal-close" id="modal-close">✕</button>
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-tab="login" data-i18n="auth.signin_tab">Вход</button>
+                <button class="modal-tab" data-tab="register" data-i18n="auth.signup_tab">Регистрация</button>
+            </div>
+            <form class="modal-form" id="login-form">
+                <div class="form-group">
+                    <label for="login-username" data-i18n="auth.username">Имя пользователя</label>
+                    <input type="text" id="login-username" required minlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="login-password" data-i18n="auth.password">Пароль</label>
+                    <input type="password" id="login-password" required minlength="8">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" data-i18n="auth.signin_btn">Войти</button>
+                <div class="form-error hidden" id="login-error"></div>
+            </form>
+            <form class="modal-form hidden" id="register-form">
+                <div class="form-group">
+                    <label for="reg-email" data-i18n="auth.email">Эл. почта</label>
+                    <input type="email" id="reg-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-username" data-i18n="auth.username">Имя пользователя</label>
+                    <input type="text" id="reg-username" required minlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="reg-fullname" data-i18n="auth.fullname">ФИО</label>
+                    <input type="text" id="reg-fullname">
+                </div>
+                <div class="form-group">
+                    <label for="reg-password" data-i18n="auth.password">Пароль</label>
+                    <input type="password" id="reg-password" required minlength="8">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" data-i18n="auth.signup_btn">Создать аккаунт</button>
+                <div class="form-error hidden" id="register-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Grant Detail Modal -->
+    <div class="modal-overlay hidden" id="grant-modal">
+        <div class="modal modal-lg">
+            <button class="modal-close" id="grant-modal-close">✕</button>
+            <div class="grant-detail" id="grant-detail"></div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand"><span class="logo-icon">✦</span> Funding Aggregator</div>
+            <div class="footer-links">
+                <a href="http://localhost:8000/docs" target="_blank">API Docs</a>
+                <a href="http://localhost:9090" target="_blank">Prometheus</a>
+                <a href="http://localhost:3001" target="_blank">Grafana</a>
+            </div>
+            <div class="footer-copy" data-i18n="footer.built_with">Сделано на FastAPI + Groq AI + PostgreSQL | 2025</div>
+        </div>
+    </footer>
+
+    <script src="js/stars.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
