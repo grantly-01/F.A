@@ -1,10 +1,6 @@
 <img width="1054" height="786" alt="image" src="https://github.com/user-attachments/assets/3405087d-3689-422c-b00e-49d620924374" />
 Технологический стек:
 <img width="872" height="502" alt="image" src="https://github.com/user-attachments/assets/bfd706c1-8759-4edd-94f8-931617a30ffa" />
-Окей, давай сделаем реально сильный README — как будто его писал человек, который шарит и защищает проект на 100 💯
-Без воды, но структурно, красиво и понятно.
-
-Вот тебе готовый текст — просто вставь в `README.md`:
 
 
 #  Funding Aggregator
